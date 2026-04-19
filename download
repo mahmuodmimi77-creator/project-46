@@ -1,0 +1,223 @@
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Filter, SlidersHorizontal, MapPin } from 'lucide-react';
+import { SearchBar } from '../components/ui/SearchBar';
+import { TripCard } from '../components/ui/TripCard';
+import { SkeletonLoader } from '../components/ui/SkeletonLoader';
+import { mockTrips } from '../data/mockData';
+import { Trip } from '../types';
+export function BrowseTrips() {
+  const [loading, setLoading] = useState(true);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  // Filters state
+  const [type, setType] = useState<'all' | 'boat' | 'farm'>('all');
+  const [sortBy, setSortBy] = useState('recommended');
+  useEffect(() => {
+    // Simulate API call
+    setLoading(true);
+    const timer = setTimeout(() => {
+      let result = [...mockTrips];
+      if (type !== 'all') {
+        result = result.filter((t) => t.type === type);
+      }
+      if (sortBy === 'price_asc') {
+        result.sort((a, b) => a.pricePerPerson - b.pricePerPerson);
+      } else if (sortBy === 'price_desc') {
+        result.sort((a, b) => b.pricePerPerson - a.pricePerPerson);
+      } else if (sortBy === 'rating') {
+        result.sort((a, b) => b.rating - a.rating);
+      }
+      setTrips(result);
+      setLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [type, sortBy]);
+  return (
+    <div className="bg-background min-h-screen pt-4 md:pt-8 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header & Search */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-display font-bold text-text-primary mb-6">
+            تصفح الرحلات
+          </h1>
+          <SearchBar compact />
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Desktop Sidebar Filters */}
+          <div className="hidden lg:block w-64 shrink-0">
+            <div className="bg-white rounded-2xl shadow-soft p-6 sticky top-28 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <Filter className="w-5 h-5 text-primary ml-2" />
+                <h2 className="font-bold text-lg">تصفية النتائج</h2>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-medium mb-3 text-sm text-text-muted">
+                    نوع الرحلة
+                  </h3>
+                  <div className="space-y-2">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="type"
+                        checked={type === 'all'}
+                        onChange={() => setType('all')}
+                        className="text-primary focus:ring-primary h-4 w-4" />
+                      
+                      <span className="mr-2 text-sm">الكل</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="type"
+                        checked={type === 'boat'}
+                        onChange={() => setType('boat')}
+                        className="text-primary focus:ring-primary h-4 w-4" />
+                      
+                      <span className="mr-2 text-sm">رحلات بحرية</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="type"
+                        checked={type === 'farm'}
+                        onChange={() => setType('farm')}
+                        className="text-primary focus:ring-primary h-4 w-4" />
+                      
+                      <span className="mr-2 text-sm">مزارع سياحية</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                  <h3 className="font-medium mb-3 text-sm text-text-muted">
+                    المدينة
+                  </h3>
+                  <select className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm outline-none focus:border-primary">
+                    <option value="">جميع المدن</option>
+                    <option value="Cairo">القاهرة</option>
+                    <option value="Aswan">أسوان</option>
+                    <option value="Luxor">الأقصر</option>
+                    <option value="Fayoum">الفيوم</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* Mobile Filter Toggle & Sort */}
+            <div className="flex justify-between items-center mb-6 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+              <button
+                className="lg:hidden flex items-center text-sm font-medium text-text-primary bg-gray-50 px-4 py-2 rounded-lg"
+                onClick={() => setShowFilters(!showFilters)}>
+                
+                <SlidersHorizontal className="w-4 h-4 ml-2" />
+                تصفية
+              </button>
+
+              <div className="flex items-center text-sm text-text-muted lg:w-full lg:justify-between">
+                <span className="hidden lg:inline-block">
+                  تم العثور على {trips.length} رحلة
+                </span>
+                <div className="flex items-center">
+                  <span className="ml-2">ترتيب حسب:</span>
+                  <select
+                    className="bg-transparent font-medium text-text-primary outline-none cursor-pointer"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}>
+                    
+                    <option value="recommended">المقترحة</option>
+                    <option value="price_asc">السعر: من الأقل للأعلى</option>
+                    <option value="price_desc">السعر: من الأعلى للأقل</option>
+                    <option value="rating">الأعلى تقييماً</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Filters Drawer (Simplified for demo) */}
+            {showFilters &&
+            <div className="lg:hidden bg-white p-4 rounded-xl shadow-md mb-6 border border-gray-100 animate-in slide-in-from-top-4">
+                <div className="flex space-x-2 space-x-reverse mb-4">
+                  <button
+                  onClick={() => setType('all')}
+                  className={`flex-1 py-2 text-sm rounded-lg border ${type === 'all' ? 'bg-primary/10 border-primary text-primary' : 'border-gray-200'}`}>
+                  
+                    الكل
+                  </button>
+                  <button
+                  onClick={() => setType('boat')}
+                  className={`flex-1 py-2 text-sm rounded-lg border ${type === 'boat' ? 'bg-primary/10 border-primary text-primary' : 'border-gray-200'}`}>
+                  
+                    بحري
+                  </button>
+                  <button
+                  onClick={() => setType('farm')}
+                  className={`flex-1 py-2 text-sm rounded-lg border ${type === 'farm' ? 'bg-primary/10 border-primary text-primary' : 'border-gray-200'}`}>
+                  
+                    مزارع
+                  </button>
+                </div>
+              </div>
+            }
+
+            {/* Results Grid */}
+            {loading ?
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <SkeletonLoader type="card" count={6} />
+              </div> :
+            trips.length > 0 ?
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {trips.map((trip, index) =>
+              <motion.div
+                key={trip.id}
+                initial={{
+                  opacity: 0,
+                  y: 20
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0
+                }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.05
+                }}>
+                
+                    <TripCard trip={trip} />
+                  </motion.div>
+              )}
+              </div> :
+
+            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="w-10 h-10 text-gray-300" />
+                </div>
+                <h3 className="text-xl font-bold text-text-primary mb-2">
+                  لا توجد نتائج
+                </h3>
+                <p className="text-text-muted">
+                  حاول تغيير خيارات البحث أو التصفية.
+                </p>
+                <button
+                onClick={() => {
+                  setType('all');
+                  setSortBy('recommended');
+                }}
+                className="mt-6 text-primary font-medium hover:underline">
+                
+                  مسح جميع الفلاتر
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>);
+
+}
